@@ -17,5 +17,4 @@ jobs:
           token: ${{ github.token }}
           title: '[NIGHTLY] Release to staging'
           commit-message: '[NIGHTLY] Release to staging'
-          base: main
           branch: env/staging
