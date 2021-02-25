@@ -1,18 +1,20 @@
 import { writeFileSync } from 'fs'
-import { join } from 'path'
 import { format } from 'prettier'
 import { compileFile } from 'pug'
 
+import { VERSION } from './env'
+import * as paths from './paths'
+
 try {
   console.log('Building page...')
-  const page = compileFile(join(__dirname, 'template.pug'))({
-    version: require('../package.json').version,
+  const page = compileFile(paths.src('template.pug'))({
+    version: VERSION,
   })
 
   console.log('Writing file...')
   writeFileSync(
-    join(__dirname, '../dist/index.html'),
-    format(page, { filepath: join(__dirname, '../.prettierrc'), parser: 'html' }),
+    paths.dist('index.html'),
+    format(page, { filepath: paths.root('.prettierrc'), parser: 'html' }),
     'utf-8',
   )
 
