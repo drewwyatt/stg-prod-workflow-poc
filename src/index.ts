@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs'
+import { existsSync, mkdirSync, rmdirSync, writeFileSync } from 'fs'
 import { format } from 'prettier'
 import { compileFile } from 'pug'
 
@@ -10,6 +10,15 @@ try {
   const page = compileFile(paths.src('template.pug'))({
     version: VERSION,
   })
+
+  console.log(`Checking for output directory...`)
+  if (existsSync(paths.dist())) {
+    console.log('Directory exists. Removing...')
+    rmdirSync(paths.dist(), { recursive: true })
+  }
+
+  console.log('Creating output directory...')
+  mkdirSync(paths.dist())
 
   console.log('Writing file...')
   writeFileSync(
