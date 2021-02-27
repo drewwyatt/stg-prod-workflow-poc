@@ -1,0 +1,54 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - env/staging
+
+jobs:
+  prepare_release:
+    name: Install and Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Read package.json
+        id: package
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./package.json
+      - uses: actions/github-script@v3
+        with:
+          script: |
+            const package = JSON.parse(steps.package.outputs.content)
+            console.log('package.version', package.version)
+            const response = await github.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            })
+            const draft = response.data.find(rel => rel.draft)
+            console.log('draft', draft)
+            const name = `Release ${package.version} (${new Date().toISOString()})`
+            console.log('release name:', releaseName)
+            if (draft) {
+              console.log('Draft release found. Updating...')
+              await github.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name,
+                release_id: draft.id,
+                draft: true,
+                target_commitish: github.sha,
+                tag_name: `v${package.version}`,
+              })
+            } else {
+              console.log('No draft release, Creating...')
+              await github.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name,
+                draft: true,
+                target_commitish: github.sha,
+                tag_name: `v${package.version}`,
+              })
+            }
