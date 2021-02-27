@@ -12,11 +12,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Read package.json
+        id: package
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./package.json
       - uses: actions/github-script@v3
         with:
           script: |
-            const releases = await github.repos.listReleases({
+            const package = JSON.parse(steps.package.outputs.content)
+            console.log('package.version', package.version)
+            const response = await github.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
-            });
-            console.log('releases', releases)
+            })
+            const draft = response.data.find(rel => rel.draft)
+            console.log('draft', draft);
+            if (draft) {
+              console.log('Draft release found. Updating...')
+              await github.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: draft.id,
+                draft: true,
+                target_commitish: github.sha,
+                tag_name: `v${package.version}`,
+              })
+            } else {
+              console.log('No draft release, Creating...')
+              await github.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                draft: true,
+                target_commitish: github.sha,
+                tag_name: `v${package.version}`,
+              })
+            }
