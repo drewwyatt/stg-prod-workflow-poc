@@ -27,12 +27,15 @@ jobs:
               repo: context.repo.repo,
             })
             const draft = response.data.find(rel => rel.draft)
-            console.log('draft', draft);
+            console.log('draft', draft)
+            const name = `Release ${package.version} (${new Date().toISOString()})`
+            console.log('release name:', releaseName)
             if (draft) {
               console.log('Draft release found. Updating...')
               await github.repos.updateRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                name,
                 release_id: draft.id,
                 draft: true,
                 target_commitish: github.sha,
@@ -43,6 +46,7 @@ jobs:
               await github.repos.updateRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                name,
                 draft: true,
                 target_commitish: github.sha,
                 tag_name: `v${package.version}`,
