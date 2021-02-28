@@ -1,13 +1,25 @@
-name: Prepare Release
+name: Release
 
 on:
   workflow_dispatch:
   push:
     branches:
       - env/staging
+  release:
+    types:
+      - published
 
 jobs:
   prepare_release:
+    name: Create Release Candidate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dump GitHub event
+        env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: echo "$EVENT_CONTEXT"
+  draft_release:
     name: Draft Production Release
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +32,7 @@ jobs:
       - name: Check for previous releases with the same version
         uses: actions/github-script@v3
         env:
-          PACKAGE_JSON_STRING: ${{steps.package.outputs.content}}
+          PACKAGE_JSON_STRING: ${{ steps.package.outputs.content }}
         with:
           script: |
             const package = JSON.parse(process.env.PACKAGE_JSON_STRING)
@@ -44,7 +56,7 @@ jobs:
       - name: Create or Update Release
         uses: actions/github-script@v3
         env:
-          PACKAGE_JSON: ${{steps.package.outputs.content}}
+          PACKAGE_JSON: ${{ steps.package.outputs.content }}
         with:
           script: |
             const package = JSON.parse(process.env.PACKAGE_JSON_STRING)
