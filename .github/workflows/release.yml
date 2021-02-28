@@ -17,9 +17,34 @@ jobs:
         uses: juliangruber/read-file-action@v1
         with:
           path: ./package.json
-      - uses: actions/github-script@v3
+      - name: Check for previous releases with the same version
+        uses: actions/github-script@v3
         env:
           PACKAGE_JSON_STRING: ${{steps.package.outputs.content}}
+        with:
+          script: |
+            const package = JSON.parse(process.env.PACKAGE_JSON_STRING)
+            // This does not include DRAFT releases (so the update bits in the next step still make sense)
+            github.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: `v${package.version}`,
+            }).then(response => {
+              console.log('Found a previous release with this version number. Failing job.')
+              console.log('response', response)
+              throw new Error(`Version number "${package.version}" already used.`)
+            }).catch(err => {
+              if (err.status === 404) {
+                console.log('✅ No published release with that version number found. Everything is good.')
+              } else {
+                // something else happened re-throw the error
+                throw err;
+              }
+            })
+      - name: Create or Update Release
+        uses: actions/github-script@v3
+        env:
+          PACKAGE_JSON: ${{steps.package.outputs.content}}
         with:
           script: |
             const package = JSON.parse(process.env.PACKAGE_JSON_STRING)
@@ -28,6 +53,7 @@ jobs:
               repo: context.repo.repo,
             })
             const draft = response.data.find(rel => rel.draft)
+
             const name = `Release ${package.version} (${new Date().toISOString()})`
             if (draft) {
               console.log(`Draft release found: "${draft.name}"`)

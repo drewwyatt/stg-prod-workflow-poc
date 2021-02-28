@@ -8,13 +8,35 @@ on:
       - env/production
 
 jobs:
-  install_and_build:
-    name: Install and Build
+  build:
+    name: Build
     runs-on: ubuntu-latest
+    if: github.base_ref != 'refs/heads/env/production'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
+      - run: yarn
+      - run: yarn build
+  build-prod:
+    name: Build Production
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'refs/heads/env/production'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Check for version tag
+        uses: actions/github-script@v3
+        with:
+          script: |
+            const response = await github.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.repo.ref,
+            })
+            console.log('response', response)
       - run: yarn
       - run: yarn build
