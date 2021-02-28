@@ -13,6 +13,7 @@ jobs:
   prepare_release:
     name: Create Release Candidate
     runs-on: ubuntu-latest
+    if: github.event_name == 'published'
     steps:
       - uses: actions/checkout@v2
       - name: Dump GitHub event
@@ -22,6 +23,7 @@ jobs:
   draft_release:
     name: Draft Production Release
     runs-on: ubuntu-latest
+    if: github.event_name != 'published'
     steps:
       - uses: actions/checkout@v2
       - name: Read package.json
