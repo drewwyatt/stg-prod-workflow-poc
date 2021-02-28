@@ -8,7 +8,7 @@ on:
 
 jobs:
   prepare_release:
-    name: Install and Build
+    name: Draft Production Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
