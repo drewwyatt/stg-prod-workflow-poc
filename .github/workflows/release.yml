@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Dump GitHub event
         env:
-          EVENT_CONTEXT: ${{ toJSON(github).event }}
+          EVENT_CONTEXT: ${{ toJSON(github) }}
         run: echo "$EVENT_CONTEXT"
   draft_release:
     name: Draft Production Release
