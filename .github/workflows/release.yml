@@ -18,37 +18,37 @@ jobs:
         with:
           path: ./package.json
       - uses: actions/github-script@v3
+        env:
+          PACKAGE_JSON_STRING: ${{steps.package.outputs.content}}
         with:
           script: |
-            const package = JSON.parse(steps.package.outputs.content)
-            console.log('package.version', package.version)
+            const package = JSON.parse(process.env.PACKAGE_JSON_STRING)
             const response = await github.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
             })
             const draft = response.data.find(rel => rel.draft)
-            console.log('draft', draft)
             const name = `Release ${package.version} (${new Date().toISOString()})`
-            console.log('release name:', releaseName)
             if (draft) {
-              console.log('Draft release found. Updating...')
+              console.log(`Draft release found: "${draft.name}"`)
+              console.log(`Updating to: "${name}"...`)
               await github.repos.updateRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                name,
-                release_id: draft.id,
                 draft: true,
-                target_commitish: github.sha,
+                name,
+                owner: context.repo.owner,
+                release_id: draft.id,
+                repo: context.repo.repo,
                 tag_name: `v${package.version}`,
+                target_commitish: github.sha,
               })
             } else {
-              console.log('No draft release, Creating...')
+              console.log(`No draft release, Creating "${name}"...`)
               await github.repos.updateRelease({
+                draft: true,
+                name,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                name,
-                draft: true,
-                target_commitish: github.sha,
                 tag_name: `v${package.version}`,
+                target_commitish: github.sha,
               })
             }
