@@ -83,7 +83,7 @@ jobs:
               })
             } else {
               console.log(`No draft release, Creating "${name}"...`)
-              await github.repos.updateRelease({
+              await github.repos.createRelease({
                 draft: true,
                 name,
                 owner: context.repo.owner,
